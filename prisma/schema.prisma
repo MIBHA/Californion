@@ -1,0 +1,238 @@
+// Californion - Database Schema
+// High-performance scheduling platform schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User & Authentication
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  username      String?   @unique
+  bio           String?
+  avatar        String?
+  timezone      String    @default("UTC")
+  
+  // Preferences
+  weekStart     Int       @default(0) // 0 = Sunday, 1 = Monday
+  timeFormat    Int       @default(12) // 12 or 24 hour
+  
+  // Metadata
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  eventTypes    EventType[]
+  availability  Availability[]
+  bookings      Booking[]
+  calendars     Calendar[]
+  
+  @@index([email])
+  @@index([username])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  
+  @@unique([identifier, token])
+}
+
+// ============================================
+// Event Types
+// ============================================
+
+model EventType {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // Basic Info
+  title       String
+  slug        String
+  description String?  @db.Text
+  
+  // Duration & Scheduling
+  length      Int      // Duration in minutes
+  
+  // Availability
+  beforeBuffer  Int    @default(0) // Minutes before event
+  afterBuffer   Int    @default(0) // Minutes after event
+  
+  // Booking Settings
+  minimumBookingNotice Int @default(120) // Minutes in advance
+  slotInterval         Int @default(30)  // Slot intervals in minutes
+  
+  // Limits
+  seatsPerTimeSlot     Int? // For group events
+  
+  // UI/UX
+  color       String   @default("#000000")
+  hidden      Boolean  @default(false)
+  position    Int      @default(0)
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+  
+  @@unique([userId, slug])
+  @@index([userId])
+  @@index([slug])
+}
+
+// ============================================
+// Availability
+// ============================================
+
+model Availability {
+  id        String   @id @default(cuid())
+  userId    String
+  
+  // Schedule
+  days      Int[]    // 0-6 (Sunday-Saturday)
+  startTime String   // HH:mm format (e.g., "09:00")
+  endTime   String   // HH:mm format (e.g., "17:00")
+  
+  // Date overrides (optional)
+  date      DateTime? // Specific date override
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+// ============================================
+// Bookings
+// ============================================
+
+model Booking {
+  id          String   @id @default(cuid())
+  userId      String
+  eventTypeId String
+  
+  // Attendee Info
+  attendeeName  String
+  attendeeEmail String
+  attendeeNotes String? @db.Text
+  attendeeTimezone String @default("UTC")
+  
+  // Scheduling
+  startTime   DateTime
+  endTime     DateTime
+  
+  // Status
+  status      BookingStatus @default(PENDING)
+  
+  // Cancellation
+  cancelledAt DateTime?
+  cancelReason String?
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType   EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([eventTypeId])
+  @@index([startTime])
+  @@index([status])
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  CANCELLED
+  REJECTED
+}
+
+// ============================================
+// Calendar Integrations
+// ============================================
+
+model Calendar {
+  id                String   @id @default(cuid())
+  userId            String
+  
+  // Integration
+  type              CalendarType
+  externalId        String   // Calendar ID from provider
+  
+  // Credentials
+  credentialId      String?  // Reference to stored credentials
+  
+  // Settings
+  primary           Boolean  @default(false)
+  readOnly          Boolean  @default(false)
+  
+  // Metadata
+  name              String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, externalId])
+  @@index([userId])
+}
+
+enum CalendarType {
+  GOOGLE
+  OUTLOOK
+  APPLE
+}
