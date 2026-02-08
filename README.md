@@ -4,12 +4,12 @@ Open-source scheduling platform built with Next.js 14+, TypeScript, Prisma, and 
 
 ## Features
 
-- 🗓️ **Smart Scheduling** - Intelligent availability detection with timezone support
-- 📅 **Event Types** - Create custom meeting types with flexible configurations
-- 🔗 **Calendar Integration** - Connect Google Calendar, Outlook, and more
-- 🎨 **Beautiful UI** - Minimalist, monochromatic design inspired by Cal.com
-- ⚡ **High Performance** - Built with Next.js App Router and optimized for speed
-- 🔐 **Secure Auth** - Magic links and OAuth with Auth.js
+-  **Smart Scheduling** - Intelligent availability detection with timezone support
+-  **Event Types** - Create custom meeting types with flexible configurations
+-  **Calendar Integration** - Connect Google Calendar, Outlook, and more
+-  **Beautiful UI** - Minimalist, monochromatic design inspired by Cal.com
+-  **High Performance** - Built with Next.js App Router and optimized for speed
+-  **Secure Auth** - Magic links and OAuth with Auth.js
 
 ## Tech Stack
 
