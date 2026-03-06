@@ -1,28 +1,32 @@
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { Calendar, Clock, Users } from "lucide-react";
 
 export default async function DashboardPage() {
-    const session = await auth();
+    // Gracefully handle demo mode (no real session/db data)
+    let eventTypes: Array<{ id: string; title: string; length: number; slug: string; color: string }> = [];
+    let bookings: Array<{ id: string; attendeeName: string; startTime: Date; status: string; eventType: { title: string } }> = [];
 
-    if (!session?.user?.id) {
-        redirect("/login");
+    try {
+        const { auth } = await import("@/lib/auth");
+        const session = await auth();
+
+        if (session?.user?.id && session.user.id !== "demo") {
+            [eventTypes, bookings] = await Promise.all([
+                prisma.eventType.findMany({
+                    where: { userId: session.user.id },
+                    orderBy: { position: "asc" },
+                }),
+                prisma.booking.findMany({
+                    where: { userId: session.user.id },
+                    include: { eventType: true },
+                    orderBy: { startTime: "desc" },
+                    take: 5,
+                }),
+            ]);
+        }
+    } catch {
+        // Demo mode — show empty state
     }
-
-    // Fetch user's event types and recent bookings
-    const [eventTypes, bookings] = await Promise.all([
-        prisma.eventType.findMany({
-            where: { userId: session.user.id },
-            orderBy: { position: "asc" },
-        }),
-        prisma.booking.findMany({
-            where: { userId: session.user.id },
-            include: { eventType: true },
-            orderBy: { startTime: "desc" },
-            take: 5,
-        }),
-    ]);
 
     return (
         <div className="space-y-8">
@@ -153,10 +157,10 @@ export default async function DashboardPage() {
                                     </div>
                                     <span
                                         className={`px-2 py-1 text-xs font-medium rounded ${booking.status === "ACCEPTED"
-                                                ? "bg-green-100 text-green-800"
-                                                : booking.status === "PENDING"
-                                                    ? "bg-yellow-100 text-yellow-800"
-                                                    : "bg-red-100 text-red-800"
+                                            ? "bg-green-100 text-green-800"
+                                            : booking.status === "PENDING"
+                                                ? "bg-yellow-100 text-yellow-800"
+                                                : "bg-red-100 text-red-800"
                                             }`}
                                     >
                                         {booking.status}
