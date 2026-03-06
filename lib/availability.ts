@@ -12,10 +12,14 @@ import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import isBetween from 'dayjs/plugin/isBetween';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isBetween);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
 
 // ============================================
 // Types
@@ -134,7 +138,7 @@ function generateSlotsForWorkingHours(
   timezone: string
 ): TimeSlot[] {
   const slots: TimeSlot[] = [];
-  
+
   // Parse start and end times
   const [startHour, startMinute] = workingHours.startTime.split(':').map(Number);
   const [endHour, endMinute] = workingHours.endTime.split(':').map(Number);
