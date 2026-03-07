@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Calendar, Github, Mail, Eye, EyeOff } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -65,7 +66,7 @@ export default function LoginPage() {
                             {/* OAuth Buttons */}
                             <div className="space-y-2 mb-6">
                                 <button
-                                    onClick={() => alert("Configure GOOGLE_CLIENT_ID in .env to enable Google login")}
+                                    onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                                     className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-border rounded-md hover:bg-accent transition-colors text-sm font-medium"
                                 >
                                     <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -77,7 +78,7 @@ export default function LoginPage() {
                                     Continue with Google
                                 </button>
                                 <button
-                                    onClick={() => alert("Configure GITHUB_CLIENT_ID in .env to enable GitHub login")}
+                                    onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
                                     className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-border rounded-md hover:bg-accent transition-colors text-sm font-medium"
                                 >
                                     <Github className="h-4 w-4" />
