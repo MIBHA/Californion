@@ -1,6 +1,7 @@
 # Californion
 
 Open-source scheduling platform built with Next.js 14+, TypeScript, Prisma, and PostgreSQL.
+
 ## https://californion.in/
 
 ## Features
